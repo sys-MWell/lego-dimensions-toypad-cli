@@ -1,0 +1,17 @@
+{
+  "name": "lego-dimensions-toypad-cli",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone CLI for Lego Dimensions ToyPad interactions",
+  "main": "interactive.js",
+  "scripts": {
+    "start": "node interactive.js",
+    "check": "node --check interactive.js && node --check src/app/ToyPadCliApp.js && node --check src/app/commandCatalog.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "node-hid": "^2.1.2"
+  }
+}
