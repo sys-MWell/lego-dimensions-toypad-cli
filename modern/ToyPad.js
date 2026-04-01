@@ -485,14 +485,14 @@ class ToyPad extends EventEmitter {
    * @param {number} type - 0=disable, 1=default UID-derived password, 2=custom password
    * @param {Buffer} customPwd - Optional 4-byte password when type=2
    */
-  setPasswordMode(type = 1, customPwd = null) {
+  setPasswordMode(tagIndex, type = 1, customPwd = null) {
     if (![0, 1, 2].includes(type)) {
       throw new Error('Password mode type must be 0, 1, or 2');
     }
 
     const commandId = this.allocateCommandId();
     const payload = Buffer.alloc(6, 0);
-    payload[0] = 84;
+    payload[0] = tagIndex;
     payload[1] = type;
 
     if (type === 2) {
