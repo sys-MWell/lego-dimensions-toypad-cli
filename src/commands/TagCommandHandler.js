@@ -63,6 +63,26 @@ class TagCommandHandler {
     }
   }
 
+  async configurePasswordModeForTag(tagIndex, passwordBytes) {
+    const toypad = this.getToyPad();
+
+    if (!toypad || typeof toypad.setPasswordMode !== 'function') {
+      return;
+    }
+
+    const zeroPwd = Buffer.from([0x00, 0x00, 0x00, 0x00]);
+    const isZeroPassword = Buffer.isBuffer(passwordBytes) && passwordBytes.length === 4 && passwordBytes.equals(zeroPwd);
+
+    if (isZeroPassword) {
+      await toypad.setPasswordMode(tagIndex, 0);
+      console.log('  ✅ ToyPad auth mode set to disable password (type 0) for blank-tag bootstrap.');
+      return;
+    }
+
+    await toypad.setPasswordMode(tagIndex, 1);
+    console.log('  ✅ ToyPad auth mode set to default UID password mode.');
+  }
+
   async writeCustomTag() {
     const toypad = this.getToyPad();
     const centerTag = this.tagState.getCenterTag();
@@ -94,6 +114,13 @@ class TagCommandHandler {
         }
 
         console.log('  ✅ Tag password check passed (no password).');
+
+        try {
+          await this.configurePasswordModeForTag(centerTag.index, pwd);
+        } catch (err) {
+          console.log(`  ⚠️  Could not configure ToyPad password mode: ${err.message}`);
+          console.log('  ℹ️  Continuing with direct write attempts.');
+        }
 
         const probeData = page38Block.slice(0, 4);
         await this.writePageForTagWithCenterFallback(centerTag, 0x26, probeData);
@@ -217,6 +244,13 @@ class TagCommandHandler {
         const page25 = (await toypad.readTag(centerTag.index, 0x25)).slice(0, 4);
         const page26 = (await toypad.readTag(centerTag.index, 0x26)).slice(0, 4);
         const page2B = (await toypad.readTag(centerTag.index, 0x2B)).slice(0, 4);
+
+        try {
+          await this.configurePasswordModeForTag(centerTag.index, page2B);
+        } catch (err) {
+          console.log(`  ⚠️  Could not configure ToyPad password mode: ${err.message}`);
+          console.log('  ℹ️  Continuing with direct reset attempts.');
+        }
 
         console.log('  Current Values');
         console.log('  ───────────────────────────────────');
@@ -417,11 +451,18 @@ class TagCommandHandler {
 
     try {
       console.log('  Reading pages 35-38 and 43...');
+      const page43 = await toypad.readTag(tag.index, 0x2B);
+
+      try {
+        await this.configurePasswordModeForTag(tag.index, page43.slice(0, 4));
+      } catch (err) {
+        console.log(`  ⚠️  Could not configure ToyPad password mode: ${err.message}`);
+      }
+
       const page35 = await toypad.readTag(tag.index, 0x23);
       const page36 = await toypad.readTag(tag.index, 0x24);
       const page37 = await toypad.readTag(tag.index, 0x25);
       const page38 = await toypad.readTag(tag.index, 0x26);
-      const page43 = await toypad.readTag(tag.index, 0x2B);
 
       console.log(`\n  UID: ${tag.uid}`);
       console.log(`  Line 35 (0x23): ${page35.slice(0, 4).toString('hex').toUpperCase()}`);

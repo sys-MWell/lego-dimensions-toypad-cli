@@ -17,7 +17,8 @@ const CMD = {
   FADE: 0xC2,
   FLASH: 0xC3,
   READ: 0xD2,
-  WRITE: 0xD3
+  WRITE: 0xD3,
+  PWD: 0xE1
 };
 
 class PacketCodec {
@@ -415,19 +416,31 @@ class ToyPad extends EventEmitter {
         dataHex: packet.data.toString('hex').toUpperCase()
       });
       this.emit(`tag-read-${packet.cid}`, packet.data);
+      this.emit(`command-response-${packet.cid}`, {
+        success: true,
+        status: packet.status,
+        data: packet.data
+      });
       return;
     }
 
-    if (packet.kind === 'short-response') {
-      this.logDebug('short-response', {
+    if (packet.kind === 'short-response' || packet.kind === 'response') {
+      const isOk = packet.ok !== undefined ? packet.ok : packet.status === 0x00;
+      
+      this.logDebug(packet.kind, {
         cid: packet.cid,
-        ok: packet.ok,
-        status: packet.status
+        ok: isOk,
+        status: packet.status,
+        length: packet.length
       });
 
       this.emit(`tag-read-${packet.cid}`, new Error(`Read response had no data (status: 0x${packet.status.toString(16).padStart(2, '0')})`));
-      const writeResult = packet.ok ? { success: true } : new Error(`Write failed with status: 0x${packet.status.toString(16).padStart(2, '0')}`);
+      const writeResult = isOk ? { success: true } : new Error(`Write failed with status: 0x${packet.status.toString(16).padStart(2, '0')}`);
       this.emit(`tag-write-${packet.cid}`, writeResult);
+      const commandResult = isOk
+        ? { success: true, status: packet.status }
+        : new Error(`Command failed with status: 0x${packet.status.toString(16).padStart(2, '0')}`);
+      this.emit(`command-response-${packet.cid}`, commandResult);
       this.emit('tag-write', writeResult);
     }
   }
@@ -464,6 +477,33 @@ class ToyPad extends EventEmitter {
     const frame = this.buildFrame(CMD.WRITE, commandId, payload);
     const eventName = `tag-write-${commandId}`;
     
+    return this.pending.waitFor(eventName, 5000, () => this.sendRaw(frame));
+  }
+
+  /**
+   * Configure ToyPad NFC password mode.
+   * @param {number} type - 0=disable, 1=default UID-derived password, 2=custom password
+   * @param {Buffer} customPwd - Optional 4-byte password when type=2
+   */
+  setPasswordMode(tagIndex, type = 1, customPwd = null) {
+    if (![0, 1, 2].includes(type)) {
+      throw new Error('Password mode type must be 0, 1, or 2');
+    }
+
+    const commandId = this.allocateCommandId();
+    const payload = Buffer.alloc(6, 0);
+    payload[0] = tagIndex;
+    payload[1] = type;
+
+    if (type === 2) {
+      if (!customPwd || customPwd.length !== 4) {
+        throw new Error('Custom password mode requires a 4-byte password buffer');
+      }
+      customPwd.copy(payload, 2);
+    }
+
+    const frame = this.buildFrame(CMD.PWD, commandId, payload);
+    const eventName = `command-response-${commandId}`;
     return this.pending.waitFor(eventName, 5000, () => this.sendRaw(frame));
   }
 
