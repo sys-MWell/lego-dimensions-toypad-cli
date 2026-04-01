@@ -1,6 +1,6 @@
 {
   "name": "lego-dimensions-toypad-cli",
-  "version": "1.0.0",
+  "version": "1.2.8",
   "private": true,
   "description": "Standalone CLI for Lego Dimensions ToyPad interactions",
   "main": "interactive.js",

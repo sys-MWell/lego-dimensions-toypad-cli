@@ -32,7 +32,6 @@ This CLI lets you:
   > **Compatible ToyPads only** — only the USB HID toy pads bundled with the following editions are supported:
   > | Platform | Compatible |
   > |----------|-----------|
-  > | PC (Windows) | ✅ |
   > | PlayStation 3 | ✅ |
   > | PlayStation 4 | ✅ |
   > | Wii U | ✅ |
@@ -168,6 +167,8 @@ Page 0x25:    B87B5747
    - [**AlinaNova21**](https://github.com/AlinaNova21) — [**node-ld**](https://github.com/AlinaNova21/node-ld) Node.js Lego Dimensions Library
    
    - [**iroteta**](https://pastebin.com/u/iroteta) — Provided [**list_of_characters.json**](https://pastebin.com/YWkX6jaV) and [**list_of_vehicles.json**](https://pastebin.com/NHmWs6gb).
+
+   - [**below**](https://github.com/below) — Reference implementations for ToyPad password mode (0xE1) and blank tag writing via [**DimensionPad**](https://github.com/below/DimensionPad) and [**OutOfSpace**](https://github.com/below/OutOfSpace).
 
 ### Graphics & Images
    - [**Jeneric (u/cwbunks)**](https://www.reddit.com/user/cwbunks/) — Created the handmade icon sheet with all character and vehicle images (25mm coin capsule size). [Source thread](https://www.reddit.com/r/Legodimensions/comments/1kxmgzu/handmade_icons_for_every_character_and_vehicle_in/).

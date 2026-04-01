@@ -15,6 +15,7 @@ const {
   tryExtractUidFromPages
 } = require('../utils/tag-utils');
 const { buildCommandCatalog } = require('./commandCatalog');
+const { version } = require('../../package.json');
 
 const KEEP_ALIVE_INTERVAL_MS = 30000;
 const KNOWN_SLOT_INDICES = [0, 1, 2, 3, 4, 5, 6];
@@ -73,7 +74,7 @@ class ToyPadCliApp {
   }
 
   printBanner() {
-    console.log('=== ToyPad Interactive Session ===\n');
+    console.log(`=== ToyPad Interactive Session v${version} ===\n`);
     console.log('This keeps the device connection alive and lets you run commands.');
     console.log('No more unplugging! Just keep this running.\n');
   }
